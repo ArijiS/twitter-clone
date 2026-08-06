@@ -80,5 +80,17 @@ export const login = async ( req,res ) => {
     }
 }
 export const logout = async ( req, res ) => {
-    res.json( {data: "You hit the logout endpoint"} );
+    try{
+        res.cookie( "jwt", "", { maxAge: 0 } );
+        res.status( 200 ).json( { message: "Logged out successfully" } );
+    }
+    catch( error ){
+        console.log( "Error in the logout controller" );
+        res.status( 500 ).json( { error: error.message } );
+    }
 }
+
+export const getMe = ( req, res ) => {
+    const user = req.user;
+    res.status( 200 ).json( user );
+};
