@@ -1,27 +1,38 @@
 import React from 'react';
 import { useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 
 import { FaImage } from "react-icons/fa6";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { IoMdCloseCircle } from "react-icons/io";
 
+import { createPostFn, authUserQueryFn } from '../../utils/db/queries.js'; 
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
+
 const CreatePost = () => {
 
   const [ text, setText ] = useState( "" );
   const [ img, setImg ] = useState( null );
-
   const imgRef = useRef( null );
 
-  const data = {
-    profileImg: "/avatars/boy1.png"
-  };
-
-  const isPending = false;
-  const isError = false;
+  const { data:authUser } = useQuery( {
+    queryKey: [ "authUser" ],
+    queryFn: authUserQueryFn,
+  } );
+  const queryClient = useQueryClient();
+  const { mutate:createPost, isPending, isError, error } = useMutation( {
+    mutationFn: createPostFn,
+    onSuccess: () => {queryClient.invalidateQueries( {
+      queryKey: [ "posts" ]} );
+      setImg(null);
+      setText("");},
+    onError: () => toast.error( "Unable to Post" )
+  } );
 
   const handleSubmit = ( e ) => {
     e.preventDefault();
-    alert( "Post create successfully" );
+    createPost( { text, img } );
+    toast.success( "Post created successfully" );
   };
 
   const handleImgChange = ( e ) => {
@@ -38,7 +49,7 @@ const CreatePost = () => {
 
       <div className="avatar mb-auto">
         <div className="size-10 rounded-full">
-          <img alt="User profile image" src={ data.profileImg || "/avatar-placeholder.png" }/>
+          <img alt="User profile image" src={ authUser.profileImg || "/avatar-placeholder.png" }/>
         </div>
       </div>
 
@@ -76,7 +87,9 @@ const CreatePost = () => {
             </button>
             <input type="file" hidden ref={ imgRef } onChange={ ( e ) => handleImgChange( e ) }/>
           </div>
-          <button className="btn px-5 bg-white rounded-full text-secondary">Post</button>
+          <button className="btn px-5 bg-white rounded-full text-secondary" disabled={isPending}>
+            { isPending ? "Posting..." : "Post" }
+          </button>
         </div>
 
       </form>
@@ -85,4 +98,4 @@ const CreatePost = () => {
   )
 }
 
-export default CreatePost
+export default CreatePost;

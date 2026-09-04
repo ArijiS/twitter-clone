@@ -21,19 +21,20 @@ const CommentModal = forwardRef( ( { post}, ref ) => {
                 
                 <div className="flex gap-x-5 min-h-20">
                     <div className="flex flex-col gap-y-0.5 items-center">
-                        <div className="size-10 rounded-full">
-                            <Link to={ `/profile/${post.user.username}` }>
-                                <img alt="Tailwind-CSS-Avatar-component" src={ post.user.profileImg || "/avatar-placeholder.png" } />
-                            </Link>          
-                        </div>
+                        <Link to={ `/profile/${post.user.username}` } >
+                            <div className="size-10 rounded-full overflow-hidden">                                
+                                <img alt="Tailwind-CSS-Avatar-component" src={ post.user.profileImg || "/avatar-placeholder.png" } 
+                                        className="object-cover"/>                                        
+                            </div>
+                        </Link>
                         <div className="w-0.5 h-full bg-gray-600"/> { /** THIS LINE */}
                     </div>
                     
                     <div className="flex flex-col flex-1">
                         <div className="flex gap-x-2 items-center">
-                            <p className="font-bold">{ post.user.fullName }</p>
+                            <p className="font-bold">{ post.user.fullname }</p>
                             <p className="font-light">{ `@${post.user.username}` }</p>
-                            <p className="font-light">{`• 1h`}</p>
+                            <p className="font-light">{"• " + new Date( post.createdAt ).toLocaleDateString() }</p>
                         </div>
                         <p>{ post.text }</p>
                     </div>

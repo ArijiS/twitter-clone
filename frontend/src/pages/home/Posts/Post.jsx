@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import { useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { authUserQueryFn, deletePostFn } from '../../../utils/db/queries.js';
 
 import CommentModal from '../../../components/modals/CommentModal';
 
@@ -8,28 +11,56 @@ import { FaRegComment } from "react-icons/fa";
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
+import { AiFillDelete } from "react-icons/ai";
 
 const Post = ( { post } ) => {
+
+  const queryClient = useQueryClient();
+
+  const { data:authUser } = useQuery( {
+    queryKey: [ "authUser" ],
+    queryFn: authUserQueryFn,
+    retry: false, 
+  } );
+
+  const { mutate:deletePost, isPending,  } = useMutation( {
+    mutationFn: deletePostFn,
+    onSuccess: () => queryClient.invalidateQueries( { queryKey: [ "posts" ] } )
+  } );
+
+  const isLoggedInUser = authUser._id === post.user._id;
+
   const modalRef = useRef( null );
-  const formattedDate = "1h";
 
   return (
     <div className="flex gap-x-3 w-full items-start border-b-2 border-gray-600 p-3">
 
       <div>
-        <div className="size-10 rounded-full">
+        <div className="size-10 rounded-full overflow-hidden">
           <Link to={ `/profile/${post.user.username}` }>
-            <img alt="Tailwind-CSS-Avatar-component" src={ post.user.profileImg || "/avatar-placeholder.png" } />
+            <img alt="Tailwind-CSS-Avatar-component" src={ post.user.profileImg || "/avatar-placeholder.png" } className="object-cover"/>
           </Link>          
         </div>
       </div>
 
       <div className="flex flex-col flex-1">
 
-        <div className="flex gap-x-2 items-center">
-          <p className="font-bold">{ post.user.fullName }</p>
-          <p className="font-light">{ `@${post.user.username}` }</p>
-          <p className="font-light">{`• ${ formattedDate }`}</p>
+        <div className="flex justify-between">
+          <div className="flex gap-x-2 items-center">
+              <p className="font-bold">{ post.user.fullname }</p>
+              <p className="font-light">{ `@${post.user.username}` }</p>
+              <p className="font-light">{ "• " + new Date( post.createdAt ).toLocaleDateString() }</p>
+          </div>
+          { 
+            isLoggedInUser && (
+              <button className="btn btn-circle hover:btn-error" disabled={ isPending }
+                onClick={ () => deletePost( post ) }
+              >
+                { isPending ? ( <span className="loading loading-spinner loading-sm"></span> ) : ( <AiFillDelete className="size-4 text-white"/> ) }
+              </button>
+            )
+          }
+          
         </div>
 
         <div className="flex flex-col gap-y-4">
